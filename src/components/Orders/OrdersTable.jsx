@@ -248,7 +248,9 @@ const OrdersTable = () => {
                     !order.isReplacement && 
                     status !== 'replaced' && 
                     status !== 'refunded' && 
-                    status !== 'return_approved'
+                    status !== 'return_approved' &&
+                    status !== 'return_requested' &&
+                    status !== 'requested'
                 );
             });
 
