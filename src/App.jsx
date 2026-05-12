@@ -227,6 +227,7 @@ export default function App() {
                     <Route path="news" element={<Navigate to="view" replace />} />
                     <Route path="news/view" element={<ViewNews />} />
                     <Route path="news/add" element={<AddNewsToday />} />
+                    <Route path="news/edit/:newsId" element={<AddNewsToday />} />
                     <Route path="news/deleted" element={<DeletedNews />} />
 
 

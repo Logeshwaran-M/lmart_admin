@@ -143,8 +143,48 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, newsItem }) => {
     );
 };
 
+/* ---------------- FULL SCREEN IMAGE VIEWER ---------------- */
+const ImageViewerModal = ({ isOpen, onClose, imageUrl }) => {
+    if (!isOpen || !imageUrl) return null;
+
+    return (
+        <div 
+            className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[100] p-4 cursor-zoom-out"
+            onClick={onClose}
+        >
+            <button
+                onClick={onClose}
+                className="absolute top-6 right-6 text-white/70 hover:text-white p-3 hover:bg-white/10 rounded-full transition-all duration-300 z-10"
+            >
+                <FiX size={32} />
+            </button>
+            
+            <div 
+                className="relative max-w-7xl w-full h-full flex items-center justify-center animate-fadeIn"
+                onClick={e => e.stopPropagation()}
+            >
+                <img
+                    src={imageUrl}
+                    alt="Full View"
+                    className="max-w-full max-h-full object-contain shadow-2xl rounded-lg transform transition-transform duration-500 hover:scale-[1.02]"
+                />
+            </div>
+        </div>
+    );
+};
+
 /* ---------------- VIEW DETAILS MODAL ---------------- */
-const ViewDetailsModal = ({ isOpen, onClose, newsItem }) => {
+const ViewDetailsModal = ({ isOpen, onClose, newsItem, onImageClick }) => {
+    const [activeImage, setActiveImage] = React.useState(null);
+
+    React.useEffect(() => {
+        if (newsItem?.mainImageUrl) {
+            setActiveImage(newsItem.mainImageUrl);
+        } else if (newsItem?.gallery?.[0]) {
+            setActiveImage(newsItem.gallery[0]);
+        }
+    }, [newsItem]);
+
     if (!isOpen || !newsItem) return null;
 
     return (
@@ -185,72 +225,75 @@ const ViewDetailsModal = ({ isOpen, onClose, newsItem }) => {
                 </div>
 
                 <div className="p-6">
-                    {/* Main Media Section */}
-                    {(newsItem.mainImageUrl || newsItem.videoUrl) && (
-                        <div className="mb-8">
-                            <div className="grid md:grid-cols-2 gap-6">
-                                {newsItem.mainImageUrl && (
-                                    <div className="space-y-3">
-                                        <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-                                            <FiImage className="text-red-500" /> Featured Image
-                                        </h4>
-                                        <div className="rounded-2xl overflow-hidden border-2 border-gray-100 shadow-xl group hover:shadow-2xl transition-all duration-300">
-                                            <img
-                                                src={newsItem.mainImageUrl}
-                                                alt="news"
-                                                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+                    {/* Featured Media Viewer */}
+                    <div className="mb-8 bg-gray-50 rounded-2xl overflow-hidden border-2 border-gray-100 shadow-xl">
+                        <div className="relative group bg-black/5 h-[600px] flex items-center justify-center overflow-hidden">
+                            {activeImage ? (
+                                <img
+                                    src={activeImage}
+                                    alt="Featured"
+                                    className="w-full h-full object-contain transition-all duration-500 cursor-zoom-in hover:scale-105"
+                                    onClick={() => onImageClick(activeImage)}
+                                />
+                            ) : (
+                                <div className="flex flex-col items-center text-gray-400">
+                                    <FiImage size={48} />
+                                    <p className="mt-2">No Image Selected</p>
+                                </div>
+                            )}
 
-                                {newsItem.videoUrl && (
-                                    <div className="space-y-3">
-                                        <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-                                            <FiVideo className="text-blue-500" /> Featured Video
-                                        </h4>
-                                        <div className="rounded-2xl overflow-hidden border-2 border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-300">
-                                            <video
-                                                src={newsItem.videoUrl}
-                                                controls
-                                                className="w-full h-64 bg-black rounded-xl"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            {/* Counter */}
+                            {Array.isArray(newsItem.gallery) && newsItem.gallery.length > 0 && (
+                                <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
+                                    {newsItem.gallery.includes(activeImage) ? newsItem.gallery.indexOf(activeImage) + 1 : 'Main'} / {newsItem.gallery.length + (newsItem.mainImageUrl ? 1 : 0)}
+                                </div>
+                            )}
                         </div>
-                    )}
 
-                    {/* Gallery Section */}
-                    {/* Gallery Section */}
-                    {Array.isArray(newsItem.gallery) && newsItem.gallery.length > 0 && (
-                        <div className="mb-8">
-                            <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                <FiGrid className="text-pink-500" />
-                                News Gallery ({newsItem.gallery.length})
-                            </h4>
-
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                {newsItem.gallery.map((img, index) => (
-                                    <div
-                                        key={index}
-                                        className="relative group rounded-xl overflow-hidden border-2 border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-300"
+                        {/* Thumbnail Strip */}
+                        {(newsItem.mainImageUrl || (Array.isArray(newsItem.gallery) && newsItem.gallery.length > 0)) && (
+                            <div className="p-3 bg-gray-50/50 flex gap-2 overflow-x-auto border-t">
+                                {newsItem.mainImageUrl && (
+                                    <button
+                                        onClick={() => setActiveImage(newsItem.mainImageUrl)}
+                                        className={`w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
+                                            activeImage === newsItem.mainImageUrl ? 'border-blue-500 ring-2 ring-blue-100' : 'border-transparent hover:border-gray-300'
+                                        }`}
                                     >
-                                        <span className="absolute top-2 left-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white text-xs px-2 py-0.5 rounded-full z-10">
-                                            GALLERY
-                                        </span>
-
-                                        <img
-                                            src={img}
-                                            alt={`gallery-${index}`}
-                                            className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-500"
-                                        />
-                                    </div>
+                                        <img src={newsItem.mainImageUrl} className="w-full h-full object-cover" alt="main" />
+                                    </button>
+                                )}
+                                {Array.isArray(newsItem.gallery) && newsItem.gallery.map((img, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setActiveImage(img)}
+                                        className={`w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
+                                            activeImage === img ? 'border-blue-500 ring-2 ring-blue-100' : 'border-transparent hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <img src={img} className="w-full h-full object-cover" alt="gallery" />
+                                    </button>
                                 ))}
                             </div>
+                        )}
+                    </div>
+
+                    {/* Featured Video Section */}
+                    {newsItem.videoUrl && (
+                        <div className="mb-8 space-y-3">
+                            <h4 className="font-semibold text-gray-700 flex items-center gap-2">
+                                <FiVideo className="text-blue-500" /> Featured Video
+                            </h4>
+                            <div className="rounded-2xl overflow-hidden border-2 border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+                                <video
+                                    src={newsItem.videoUrl}
+                                    controls
+                                    className="w-full h-64 bg-black rounded-xl"
+                                />
+                            </div>
                         </div>
                     )}
+
 
 
                     {/* Content Section */}
@@ -340,7 +383,7 @@ const ViewDetailsModal = ({ isOpen, onClose, newsItem }) => {
 };
 
 /* ---------------- NEWS CARD COMPONENT ---------------- */
-const NewsCard = ({ news, onView, onDelete }) => {
+const NewsCard = ({ news, onView, onDelete, onEdit, onImageClick }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
 
@@ -357,7 +400,11 @@ const NewsCard = ({ news, onView, onDelete }) => {
                         <img
                             src={news.mainImageUrl}
                             alt={news.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 cursor-zoom-in"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onImageClick(news.mainImageUrl);
+                            }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     </>
@@ -406,6 +453,13 @@ const NewsCard = ({ news, onView, onDelete }) => {
                             title="View Details"
                         >
                             <FiEye className="w-5 h-5 text-blue-600" />
+                        </button>
+                        <button
+                            onClick={onEdit}
+                            className="p-3 bg-white rounded-full hover:bg-yellow-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-110"
+                            title="Edit Article"
+                        >
+                            <FiEdit2 className="w-5 h-5 text-yellow-600" />
                         </button>
                         <button
                             onClick={onDelete}
@@ -487,7 +541,9 @@ const ViewNews = () => {
     const [viewMode, setViewMode] = useState('grid'); // grid or list
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [viewModalOpen, setViewModalOpen] = useState(false);
+    const [viewerModalOpen, setViewerModalOpen] = useState(false);
     const [selectedNews, setSelectedNews] = useState(null);
+    const [selectedImageUrl, setSelectedImageUrl] = useState(null);
 
     /* FETCH NEWS */
     useEffect(() => {
@@ -566,6 +622,16 @@ const ViewNews = () => {
                 isOpen={viewModalOpen}
                 onClose={() => setViewModalOpen(false)}
                 newsItem={selectedNews}
+                onImageClick={(url) => {
+                    setSelectedImageUrl(url);
+                    setViewerModalOpen(true);
+                }}
+            />
+
+            <ImageViewerModal
+                isOpen={viewerModalOpen}
+                onClose={() => setViewerModalOpen(false)}
+                imageUrl={selectedImageUrl}
             />
 
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 md:p-6">
@@ -743,6 +809,11 @@ const ViewNews = () => {
                                             onDelete={() => {
                                                 setSelectedNews(news);
                                                 setDeleteModalOpen(true);
+                                            }}
+                                            onEdit={() => navigate(`/news/edit/${news.id}`)}
+                                            onImageClick={(url) => {
+                                                setSelectedImageUrl(url);
+                                                setViewerModalOpen(true);
                                             }}
                                         />
                                     ))}

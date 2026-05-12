@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate, useParams } from "react-router-dom"; 
 import {
     FiFileText,
     FiTag,
@@ -13,13 +13,16 @@ import {
     FiPlus,
     FiChevronDown,
     FiTrash2,
-    FiGlobe
+    FiGlobe,
+    FiArrowLeft
 } from 'react-icons/fi';
 import { 
     collection, 
     doc,
     setDoc,
+    getDoc,
     getDocs,
+    updateDoc,
     serverTimestamp
 } from "firebase/firestore";
 import { 
@@ -31,6 +34,8 @@ import { db, storage } from "../../firebase";
 
 const AddNewsToday = () => {
     const navigate = useNavigate();
+    const { newsId } = useParams();
+    const isEditMode = !!newsId;
 
    const [formData, setFormData] = useState({
     title: '',
@@ -43,6 +48,8 @@ const AddNewsToday = () => {
     location: '',
     marketRates: [{ itemName: '', price: '' }],
 });
+
+const [existingData, setExistingData] = useState(null);
 
 const [mainImagePreview, setMainImagePreview] = useState(null);
 
@@ -66,7 +73,45 @@ const [mainImagePreview, setMainImagePreview] = useState(null);
     // -------------------------
     useEffect(() => {
         fetchExistingCategories();
-    }, []);
+        if (isEditMode) {
+            fetchNewsDetails();
+        }
+    }, [newsId]);
+
+    const fetchNewsDetails = async () => {
+        try {
+            setIsSaving(true);
+            const docRef = doc(db, "news", newsId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                setExistingData(data);
+                setFormData({
+                    title: data.title || '',
+                    excerpt: data.excerpt || '',
+                    category: data.category || '',
+                    date: data.date || '',
+                    mainImage: null,
+                    images: [],
+                    video: null,
+                    location: data.location || '',
+                    marketRates: data.marketRates?.length ? data.marketRates : [{ itemName: '', price: '' }],
+                });
+
+                if (data.mainImageUrl) setMainImagePreview(data.mainImageUrl);
+                if (data.gallery) setImagePreviews(data.gallery);
+                if (data.videoUrl) setVideoPreview(data.videoUrl);
+            } else {
+                setSaveMessage("News article not found.");
+            }
+        } catch (error) {
+            console.error("Error fetching news details:", error);
+            setSaveMessage("Failed to fetch news details.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const fetchExistingCategories = async () => {
         try {
@@ -105,25 +150,27 @@ const [mainImagePreview, setMainImagePreview] = useState(null);
 };
 
 const handleRemoveMainImage = () => {
-    URL.revokeObjectURL(mainImagePreview);
+    if (mainImagePreview && mainImagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(mainImagePreview);
+    }
     setFormData(prev => ({ ...prev, mainImage: null }));
     setMainImagePreview(null);
 };
 
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files);
 
-    if (!files.length) return;
+        if (!files.length) return;
 
-    setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, ...files]
-    }));
+        setFormData(prev => ({
+            ...prev,
+            images: [...prev.images, ...files]
+        }));
 
-    const previews = files.map(file => URL.createObjectURL(file));
-    setImagePreviews(prev => [...prev, ...previews]);
-};
+        const previews = files.map(file => URL.createObjectURL(file));
+        setImagePreviews(prev => [...prev, ...previews]);
+    };
 
 
     const handleVideoChange = (e) => {
@@ -134,23 +181,44 @@ const handleRemoveMainImage = () => {
         }
     };
 
-  const handleRemoveImage = (index) => {
-    URL.revokeObjectURL(imagePreviews[index]);
+    const handleRemoveImage = (index) => {
+        const previewToRemove = imagePreviews[index];
+        if (previewToRemove && previewToRemove.startsWith('blob:')) {
+            URL.revokeObjectURL(previewToRemove);
+        }
 
-    setFormData(prev => ({
-        ...prev,
-        images: prev.images.filter((_, i) => i !== index)
-    }));
+        // We need to find the correct index in formData.images
+        // In Edit mode, imagePreviews contains existing URLs + new blobs
+        // formData.images ONLY contains new files.
+        
+        const isNewFile = previewToRemove && previewToRemove.startsWith('blob:');
+        
+        if (isNewFile) {
+            // Find which File it corresponds to.
+            // This is tricky because we don't store the mapping.
+            // Let's change the approach: Use a unified array for editing.
+            
+            // Actually, let's just count how many blobs were before this one.
+            let blobIndex = 0;
+            for(let i=0; i<index; i++) {
+                if (imagePreviews[i].startsWith('blob:')) blobIndex++;
+            }
+            
+            setFormData(prev => ({
+                ...prev,
+                images: prev.images.filter((_, i) => i !== blobIndex)
+            }));
+        }
 
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
-};
+        setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    };
 
 
 const handleReplaceMainImage = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (mainImagePreview) {
+    if (mainImagePreview && mainImagePreview.startsWith('blob:')) {
         URL.revokeObjectURL(mainImagePreview);
     }
 
@@ -161,21 +229,45 @@ const handleReplaceMainImage = (e) => {
 const handleReplaceGalleryImage = (index, file) => {
     if (!file) return;
 
-    URL.revokeObjectURL(imagePreviews[index]);
+    const oldPreview = imagePreviews[index];
+    if (oldPreview && oldPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(oldPreview);
+    }
 
     const newPreview = URL.createObjectURL(file);
 
-    setFormData(prev => {
-        const updatedImages = [...prev.images];
-        updatedImages[index] = file;
-        return { ...prev, images: updatedImages };
-    });
+    const isExisting = oldPreview && !oldPreview.startsWith('blob:');
 
-    setImagePreviews(prev => {
-        const updated = [...prev];
-        updated[index] = newPreview;
-        return updated;
-    });
+    if (isExisting) {
+        // If it was an existing URL, we treat it as a removal of the URL and addition of a new file
+        setImagePreviews(prev => {
+            const updated = [...prev];
+            updated[index] = newPreview;
+            return updated;
+        });
+        setFormData(prev => ({
+            ...prev,
+            images: [...prev.images, file]
+        }));
+    } else {
+        // It was a blob, find its index in formData.images
+        let blobIndex = 0;
+        for(let i=0; i<index; i++) {
+            if (imagePreviews[i].startsWith('blob:')) blobIndex++;
+        }
+        
+        setFormData(prev => {
+            const updatedImages = [...prev.images];
+            updatedImages[blobIndex] = file;
+            return { ...prev, images: updatedImages };
+        });
+        
+        setImagePreviews(prev => {
+            const updated = [...prev];
+            updated[index] = newPreview;
+            return updated;
+        });
+    }
 };
 
 const handleReplaceVideo = (e) => {
@@ -263,70 +355,97 @@ const handleReplaceVideo = (e) => {
         setSaveMessage('');
 
         try {
-        
-            let mainImageUrl = null;
-let mainImagePath = null;
+            let mainImageUrl = existingData?.mainImageUrl || null;
+            let mainImagePath = existingData?.mainImagePath || null;
 
-if (formData.mainImage) {
-    mainImagePath = `news/main/${Date.now()}_${formData.mainImage.name}`;
-    const imageRef = ref(storage, mainImagePath);
+            if (formData.mainImage) {
+                mainImagePath = `news/main/${Date.now()}_${formData.mainImage.name}`;
+                const imageRef = ref(storage, mainImagePath);
+                await uploadBytes(imageRef, formData.mainImage);
+                mainImageUrl = await getDownloadURL(imageRef);
+            } else if (mainImagePreview === null) {
+                // Image was removed
+                mainImageUrl = null;
+                mainImagePath = null;
+            }
 
-    await uploadBytes(imageRef, formData.mainImage);
-    mainImageUrl = await getDownloadURL(imageRef);
-}
+            let videoUrl = existingData?.videoUrl || null;
+            let videoPath = existingData?.videoPath || null;
 
-            let videoUrl = null, videoPath = null;
-
-let galleryUrls = [];
-let galleryPaths = [];
-
-if (formData.images.length > 0) {
-    for (const image of formData.images) {
-        const path = `news/gallery/${Date.now()}_${image.name}`;
-        const imageRef = ref(storage, path);
-
-        await uploadBytes(imageRef, image);
-        const url = await getDownloadURL(imageRef);
-
-        galleryUrls.push(url);
-        galleryPaths.push(path);
-    }
-}
-
-
-            // Upload Video
             if (formData.video) {
                 videoPath = `news/videos/${Date.now()}_${formData.video.name}`;
                 const videoRef = ref(storage, videoPath);
                 await uploadBytes(videoRef, formData.video);
                 videoUrl = await getDownloadURL(videoRef);
+            } else if (videoPreview === null) {
+                // Video was removed
+                videoUrl = null;
+                videoPath = null;
             }
 
-            const docRef = doc(collection(db, "news"));
-await setDoc(docRef, {
-    id: docRef.id,
-    title: formData.title.trim(),
-    excerpt: formData.excerpt.trim(),
-    category: formData.category.trim(),
-    date: formData.date,
+            let galleryUrls = isEditMode ? (existingData?.gallery || []) : [];
+            let galleryPaths = isEditMode ? (existingData?.galleryPaths || []) : [];
 
-    mainImageUrl,
-    mainImagePath,
+            // If images were removed from preview but they were existing ones
+            if (isEditMode) {
+                const updatedGallery = [];
+                const updatedPaths = [];
+                imagePreviews.forEach((preview, index) => {
+                    // If it's a URL (existing image) and it's in the original gallery
+                    if (typeof preview === 'string' && preview.startsWith('http')) {
+                        const originalIdx = existingData.gallery.indexOf(preview);
+                        if (originalIdx !== -1) {
+                            updatedGallery.push(preview);
+                            updatedPaths.push(existingData.galleryPaths[originalIdx]);
+                        }
+                    }
+                });
+                galleryUrls = updatedGallery;
+                galleryPaths = updatedPaths;
+            }
 
-    gallery: galleryUrls,
-    galleryPaths,
+            // Upload new gallery images
+            if (formData.images.length > 0) {
+                for (const image of formData.images) {
+                    const path = `news/gallery/${Date.now()}_${image.name}`;
+                    const imageRef = ref(storage, path);
+                    await uploadBytes(imageRef, image);
+                    const url = await getDownloadURL(imageRef);
+                    galleryUrls.push(url);
+                    galleryPaths.push(path);
+                }
+            }
 
-    videoUrl,
-    videoPath,
+            const newsData = {
+                title: formData.title.trim(),
+                excerpt: formData.excerpt.trim(),
+                category: formData.category.trim(),
+                date: formData.date,
+                mainImageUrl,
+                mainImagePath,
+                gallery: galleryUrls,
+                galleryPaths,
+                videoUrl,
+                videoPath,
+                location: formData.location.trim(),
+                marketRates: formData.marketRates.filter(rate => rate.itemName.trim() || rate.price.trim()),
+                updatedAt: serverTimestamp(),
+            };
 
-    location: formData.location.trim(),
-    marketRates: formData.marketRates.filter(rate => rate.itemName.trim() || rate.price.trim()),
+            if (isEditMode) {
+                const docRef = doc(db, "news", newsId);
+                await updateDoc(docRef, newsData);
+                setSaveMessage("News article updated successfully!");
+            } else {
+                const docRef = doc(collection(db, "news"));
+                await setDoc(docRef, {
+                    ...newsData,
+                    id: docRef.id,
+                    createdAt: serverTimestamp(),
+                });
+                setSaveMessage("News article added successfully!");
+            }
 
-    createdAt: serverTimestamp(),
-});
-
-
-            setSaveMessage("News article added successfully!");
             setTimeout(() => navigate('/news/view'), 1200);
 
         } catch (error) {
@@ -345,14 +464,22 @@ await setDoc(docRef, {
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
-                <div className="mb-8 text-center">
+                <div className="mb-8 text-center relative">
+                    <button
+                        onClick={() => navigate('/news/view')}
+                        className="absolute left-0 top-1/2 -translate-y-1/2 p-3 bg-white rounded-full shadow-md hover:shadow-lg transition-all text-gray-600 hover:text-blue-600"
+                    >
+                        <FiArrowLeft size={20} />
+                    </button>
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4 shadow-lg">
                         <FiGlobe className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        Add News Today
+                        {isEditMode ? 'Edit News Article' : 'Add News Today'}
                     </h1>
-                    <p className="text-gray-600 mt-2">Share the latest updates with your audience</p>
+                    <p className="text-gray-600 mt-2">
+                        {isEditMode ? 'Update existing news information' : 'Share the latest updates with your audience'}
+                    </p>
                 </div>
 
                 {/* Main Form Card */}
@@ -791,7 +918,7 @@ await setDoc(docRef, {
                                     ) : (
                                         <>
                                             <FiSave className="mr-2" />
-                                            Publish News
+                                            {isEditMode ? 'Update News' : 'Publish News'}
                                         </>
                                     )}
                                 </button>
