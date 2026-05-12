@@ -79,10 +79,11 @@ const convertToCSV = (data) => {
     return [headers.join(','), ...rows.map(r => r.map(sanitize).join(','))].join('\n');
 };
 
-const ORDER_STATUSES = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded'];
+const ORDER_STATUSES = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded'];
 
 const STATUS_FLOW = {
-  Pending: ['Processing', 'Cancelled'],
+  Pending: ['Confirmed', 'Cancelled'],
+  Confirmed: ['Processing', 'Cancelled'],
   Processing: ['Shipped', 'Refunded', 'Cancelled'],
   Shipped: ['Delivered', 'Cancelled'],
   Delivered: [],
@@ -97,7 +98,8 @@ const StatusBadge = ({ status }) => {
         Processing: 'bg-yellow-100 text-yellow-700',
         Cancelled: 'bg-red-100 text-red-700 line-through',
         Refunded: 'bg-red-100 text-red-700',
-        Pending: 'bg-blue-100 text-blue-700'
+        Pending: 'bg-blue-100 text-blue-700',
+        Confirmed: 'bg-purple-100 text-purple-700'
     };
 
     return (
@@ -245,7 +247,6 @@ const OrdersTable = () => {
             }).filter(order => {
                 const status = (order.status || '').toLowerCase();
                 return (
-                    !order.isReplacement && 
                     status !== 'replaced' && 
                     status !== 'refunded' && 
                     status !== 'return_approved' &&
