@@ -164,7 +164,7 @@ export const CancelledOrdersTable = () => {
           phone: data.phone || customerInfo.phone || 'N/A',
           address: address || 'N/A',
         };
-      });
+      }).filter(order => !order.isReplacement);
 
       // sort by createdAt (newest first) if present, otherwise keep as-is
       list.sort((a, b) => {

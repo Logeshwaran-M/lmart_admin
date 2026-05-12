@@ -398,6 +398,15 @@ function AdminDashboardContent() {
             
             ordersSnapshot.docs.forEach(orderDoc => {
                 const data = orderDoc.data();
+                
+                // Filter out return-related orders
+                if (
+                    data.isReplacement || 
+                    ['replaced', 'refunded', 'refunded', 'return_approved'].includes(data.status?.toLowerCase())
+                ) {
+                    return;
+                }
+
                 // Aggregate revenue
                 totalRevenue += (data.amount || 0);
                 

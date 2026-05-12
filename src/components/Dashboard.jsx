@@ -384,6 +384,14 @@ function AdminDashboardContent() {
             ordersSnapshot.docs.forEach(orderDoc => {
                 const data = orderDoc.data();
                 
+                // Filter out return-related orders
+                if (
+                    data.isReplacement || 
+                    ['replaced', 'refunded', 'return_approved'].includes(data.status?.toLowerCase())
+                ) {
+                    return;
+                }
+
                 // Collect order data
                 allOrders.push({ 
                     ...data, 

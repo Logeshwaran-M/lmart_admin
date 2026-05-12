@@ -169,7 +169,7 @@ export default function PendingOrdersTable() {
           phone: data.phone || customerInfo.phone || "N/A",
           address: address || "N/A",
         };
-      });
+      }).filter(order => !order.isReplacement);
 
       // newest first
       list.sort((a, b) => {

@@ -153,7 +153,7 @@ export const DeliveredOrdersTable = () => {
                                 customerInfo.pincode || ''
                             }`.replace(/^,\s*/, ''),
                     };
-                });
+                }).filter(order => !order.isReplacement);
 
                 setOrders(list);
                 setFilteredOrders(list);

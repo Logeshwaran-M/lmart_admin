@@ -242,6 +242,14 @@ const OrdersTable = () => {
                     phone: data.phone || data.customerInfo?.phone || "N/A",
                     address: data.address || data.customerInfo?.address || "N/A",
                 };
+            }).filter(order => {
+                const status = (order.status || '').toLowerCase();
+                return (
+                    !order.isReplacement && 
+                    status !== 'replaced' && 
+                    status !== 'refunded' && 
+                    status !== 'return_approved'
+                );
             });
 
             // Sort by createdAt descending

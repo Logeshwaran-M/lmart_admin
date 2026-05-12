@@ -37,9 +37,11 @@ const AddNewsToday = () => {
     excerpt: '',
     category: '',
     date: '',
-    mainImage: null,     // ✅ NEW
-    images: [],          // ✅ Gallery
+    mainImage: null,
+    images: [],
     video: null,
+    location: '',
+    marketRates: [{ itemName: '', price: '' }],
 });
 
 const [mainImagePreview, setMainImagePreview] = useState(null);
@@ -208,6 +210,37 @@ const handleReplaceVideo = (e) => {
         setShowCategoryInput(false);
     };
 
+    // -------------------------
+    // Market Rates Handlers
+    // -------------------------
+    const handleMarketRateChange = (index, field, value) => {
+        const updatedRates = [...formData.marketRates];
+        updatedRates[index][field] = value;
+        setFormData(prev => ({ ...prev, marketRates: updatedRates }));
+    };
+
+    const addMarketRate = () => {
+        if (formData.marketRates.length >= 3) return;
+        setFormData(prev => ({
+            ...prev,
+            marketRates: [...prev.marketRates, { itemName: '', price: '' }]
+        }));
+    };
+
+    const removeMarketRate = (index) => {
+        if (formData.marketRates.length === 1) {
+            setFormData(prev => ({
+                ...prev,
+                marketRates: [{ itemName: '', price: '' }]
+            }));
+            return;
+        }
+        setFormData(prev => ({
+            ...prev,
+            marketRates: prev.marketRates.filter((_, i) => i !== index)
+        }));
+    };
+
     const handleCancel = () => {
         if (window.confirm("Unsaved data will be lost. Continue?")) {
             navigate('/news/view');
@@ -285,6 +318,9 @@ await setDoc(docRef, {
 
     videoUrl,
     videoPath,
+
+    location: formData.location.trim(),
+    marketRates: formData.marketRates.filter(rate => rate.itemName.trim() || rate.price.trim()),
 
     createdAt: serverTimestamp(),
 });
@@ -615,39 +651,127 @@ await setDoc(docRef, {
                                     disabled={isFormDisabled}
                                 />
                             </div>
-{/* Publication Date */}
-<div>
-    <label className="block text-sm font-semibold text-gray-700 mb-2">
-        <FiCalendar className="inline mr-2" />
-        Publication Date *
-    </label>
+                            {/* Publication Date & Location */}
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <FiCalendar className="inline mr-2" />
+                                        Publication Date *
+                                    </label>
 
-    <input
-        type="date"
-        name="date"
-        value={
-            formData.date
-                ? formData.date.split('/').reverse().join('-')
-                : ''
-        }
-        onChange={(e) => {
-            const [y, m, d] = e.target.value.split('-');
-            handleChange({
-                target: {
-                    name: 'date',
-                    value: `${d}/${m}/${y}` // DD/MM/YYYY
-                }
-            });
-        }}
-        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-        required
-        disabled={isFormDisabled}
-    />
+                                    <input
+                                        type="date"
+                                        name="date"
+                                        value={
+                                            formData.date
+                                                ? formData.date.split('/').reverse().join('-')
+                                                : ''
+                                        }
+                                        onChange={(e) => {
+                                            const [y, m, d] = e.target.value.split('-');
+                                            handleChange({
+                                                target: {
+                                                    name: 'date',
+                                                    value: `${d}/${m}/${y}` // DD/MM/YYYY
+                                                }
+                                            });
+                                        }}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                        required
+                                        disabled={isFormDisabled}
+                                    />
 
-    <p className="text-sm text-gray-500 mt-1">
-        Pick a date from calendar
-    </p>
-</div>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Pick a date from calendar
+                                    </p>
+                                </div>
+
+                                {/* Location */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <FiGlobe className="inline mr-2" />
+                                        Location
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="location"
+                                        placeholder=""
+                                        value={formData.location}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                        disabled={isFormDisabled}
+                                    />
+                                </div>
+                            </div>
+
+
+
+                            {/* Contact Details (Dynamic Inputs) */}
+                            <div className="space-y-6 border-t pt-8">
+                                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                    <FiGlobe className="text-blue-500" />
+                                    News Contact Details
+                                </h3>
+
+                                <div className="space-y-4">
+
+                                    {formData.marketRates.map((rate, index) => {
+                                        const placeholders = [
+                                            { first: "name", second: "email" },
+                                            { first: "phone", second: "address" },
+                                            { first: "city", second: "pincode" }
+                                        ];
+                                        const currentPlaceholder = placeholders[index] || { first: "Label", second: "Value" };
+
+                                        return (
+                                            <div key={index} className="flex gap-4 items-end animate-fadeIn">
+                                                <div className="flex-1">
+                                                    <input
+                                                        type="text"
+                                                        placeholder={currentPlaceholder.first}
+                                                        value={rate.itemName}
+                                                        onChange={(e) => handleMarketRateChange(index, 'itemName', e.target.value)}
+                                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                                        disabled={isFormDisabled}
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <input
+                                                        type="text"
+                                                        placeholder={currentPlaceholder.second}
+                                                        value={rate.price}
+                                                        onChange={(e) => handleMarketRateChange(index, 'price', e.target.value)}
+                                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                                        disabled={isFormDisabled}
+                                                    />
+                                                </div>
+                                                {formData.marketRates.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeMarketRate(index)}
+                                                        className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                                                        disabled={isFormDisabled}
+                                                    >
+                                                        <FiTrash2 size={20} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+
+                                    {formData.marketRates.length < 3 && (
+                                        <button
+                                            type="button"
+                                            onClick={addMarketRate}
+                                            className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors py-2"
+                                            disabled={isFormDisabled}
+                                        >
+                                            <FiPlus className="p-1 bg-blue-100 rounded-full" size={24} />
+                                            Add more Rows
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
 
 
                             {/* Action Buttons */}

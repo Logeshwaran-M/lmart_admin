@@ -209,7 +209,7 @@ export default function CompletedOrdersTable() {
           address: address || "N/A",
         };
 
-      });
+      }).filter(order => !order.isReplacement);
 
       /* newest first */
 

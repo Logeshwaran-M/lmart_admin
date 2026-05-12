@@ -109,7 +109,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, newsItem }) => {
                         Are you sure you want to permanently delete this article?
                     </p>
                 </div>
-                
+
                 <div className="mb-8 p-5 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 shadow-sm">
                     <h4 className="font-bold text-gray-800 mb-2 line-clamp-1">{newsItem?.title}</h4>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -125,13 +125,13 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, newsItem }) => {
                 </div>
 
                 <div className="flex justify-end gap-4">
-                    <button 
+                    <button
                         onClick={onClose}
                         className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium hover:shadow-md"
                     >
                         Cancel
                     </button>
-                    <button 
+                    <button
                         onClick={onConfirm}
                         className="px-6 py-3 bg-gradient-to-r from-red-500 via-red-600 to-red-700 text-white rounded-xl hover:from-red-600 hover:to-red-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     >
@@ -174,7 +174,7 @@ const ViewDetailsModal = ({ isOpen, onClose, newsItem }) => {
                                     )}
                                 </div>
                             </div>
-                            <button 
+                            <button
                                 onClick={onClose}
                                 className="text-white hover:bg-white/30 p-2 rounded-full transition-all duration-200 backdrop-blur-sm"
                             >
@@ -203,7 +203,7 @@ const ViewDetailsModal = ({ isOpen, onClose, newsItem }) => {
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 {newsItem.videoUrl && (
                                     <div className="space-y-3">
                                         <h4 className="font-semibold text-gray-700 flex items-center gap-2">
@@ -223,34 +223,34 @@ const ViewDetailsModal = ({ isOpen, onClose, newsItem }) => {
                     )}
 
                     {/* Gallery Section */}
-                  {/* Gallery Section */}
-{Array.isArray(newsItem.gallery) && newsItem.gallery.length > 0 && (
-    <div className="mb-8">
-        <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <FiGrid className="text-pink-500" />
-            News Gallery ({newsItem.gallery.length})
-        </h4>
+                    {/* Gallery Section */}
+                    {Array.isArray(newsItem.gallery) && newsItem.gallery.length > 0 && (
+                        <div className="mb-8">
+                            <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <FiGrid className="text-pink-500" />
+                                News Gallery ({newsItem.gallery.length})
+                            </h4>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {newsItem.gallery.map((img, index) => (
-                <div
-                    key={index}
-                    className="relative group rounded-xl overflow-hidden border-2 border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-300"
-                >
-                    <span className="absolute top-2 left-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white text-xs px-2 py-0.5 rounded-full z-10">
-                        GALLERY
-                    </span>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {newsItem.gallery.map((img, index) => (
+                                    <div
+                                        key={index}
+                                        className="relative group rounded-xl overflow-hidden border-2 border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-300"
+                                    >
+                                        <span className="absolute top-2 left-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white text-xs px-2 py-0.5 rounded-full z-10">
+                                            GALLERY
+                                        </span>
 
-                    <img
-                        src={img}
-                        alt={`gallery-${index}`}
-                        className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                </div>
-            ))}
-        </div>
-    </div>
-)}
+                                        <img
+                                            src={img}
+                                            alt={`gallery-${index}`}
+                                            className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-500"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
 
                     {/* Content Section */}
@@ -267,6 +267,51 @@ const ViewDetailsModal = ({ isOpen, onClose, newsItem }) => {
                             </div>
                         </div>
                     </div>
+
+                    {/* Contact Details Section */}
+                    {(newsItem.location || (Array.isArray(newsItem.marketRates) && newsItem.marketRates.length > 0)) && (
+                        <div className="mb-8">
+                            <h4 className="text-xl font-bold text-gray-800 border-b pb-3 flex items-center gap-2 mb-6">
+                                <FiGlobe className="text-blue-500" />
+                                Contact Details
+                            </h4>
+                            
+                            <div className="space-y-4 px-2">
+                                {newsItem.location && (
+                                    <div className="flex gap-2 text-lg">
+                                        <span className="text-gray-900 font-bold min-w-[100px]">Location:</span>
+                                        <span className="text-gray-700">{newsItem.location}</span>
+                                    </div>
+                                )}
+
+                                {Array.isArray(newsItem.marketRates) && newsItem.marketRates.map((rate, index) => {
+                                    const labels = [
+                                        { first: "Name", second: "Email" },
+                                        { first: "Phone", second: "Address" },
+                                        { first: "City", second: "Pincode" }
+                                    ];
+                                    const currentLabel = labels[index] || { first: "Label", second: "Value" };
+
+                                    return (
+                                        <React.Fragment key={index}>
+                                            {rate.itemName && (
+                                                <div className="flex gap-2 text-lg">
+                                                    <span className="text-gray-900 font-bold min-w-[110px]">{currentLabel.first}:</span>
+                                                    <span className="text-gray-700">{rate.itemName}</span>
+                                                </div>
+                                            )}
+                                            {rate.price && (
+                                                <div className="flex gap-2 text-lg">
+                                                    <span className="text-gray-900 font-bold min-w-[110px]">{currentLabel.second}:</span>
+                                                    <span className="text-gray-700">{rate.price}</span>
+                                                </div>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Metadata */}
                     <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
@@ -290,9 +335,9 @@ const ViewDetailsModal = ({ isOpen, onClose, newsItem }) => {
                             <div className="bg-white p-4 rounded-xl border border-pink-100 hover:shadow-md transition-shadow duration-200">
                                 <div className="text-xs text-pink-600 font-semibold mb-1">Media</div>
                                 <div className="font-bold text-gray-800">
-                                    {newsItem.mainImageUrl && newsItem.videoUrl ? 'Image + Video' : 
-                                     newsItem.mainImageUrl ? 'Image Only' : 
-                                     newsItem.videoUrl ? 'Video Only' : 'No Media'}
+                                    {newsItem.mainImageUrl && newsItem.videoUrl ? 'Image + Video' :
+                                        newsItem.mainImageUrl ? 'Image Only' :
+                                            newsItem.videoUrl ? 'Video Only' : 'No Media'}
                                 </div>
                             </div>
                         </div>
@@ -300,7 +345,7 @@ const ViewDetailsModal = ({ isOpen, onClose, newsItem }) => {
 
                     {/* Footer Actions */}
                     <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
-                        <button 
+                        <button
                             onClick={onClose}
                             className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:shadow-md transition-all duration-200 font-medium"
                         >
@@ -319,7 +364,7 @@ const NewsCard = ({ news, onView, onDelete }) => {
     const [isLiked, setIsLiked] = useState(false);
 
     return (
-        <div 
+        <div
             className="bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-2xl transition-all duration-500 overflow-hidden group transform hover:-translate-y-1"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -328,8 +373,8 @@ const NewsCard = ({ news, onView, onDelete }) => {
             <div className="relative h-52 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                 {news.mainImageUrl ? (
                     <>
-                        <img 
-                            src={news.mainImageUrl} 
+                        <img
+                            src={news.mainImageUrl}
                             alt={news.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
@@ -354,7 +399,7 @@ const NewsCard = ({ news, onView, onDelete }) => {
                         </div>
                     </div>
                 )}
-                
+
                 {/* Category Badge */}
                 <div className="absolute top-4 left-4">
                     <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-xl">
@@ -404,7 +449,7 @@ const NewsCard = ({ news, onView, onDelete }) => {
                 <h3 className="font-bold text-lg text-gray-800 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300">
                     {news.title}
                 </h3>
-                
+
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                     {news.excerpt}
                 </p>
@@ -414,7 +459,7 @@ const NewsCard = ({ news, onView, onDelete }) => {
                         <FiCalendar className="text-blue-500" size={14} />
                         {formatDate(news.date)}
                     </div>
-                    
+
                     <button
                         onClick={onView}
                         className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors duration-200"
@@ -442,8 +487,8 @@ const StatsCard = ({ icon: Icon, label, value, color, gradient }) => (
         </div>
         <div className="mt-4">
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div className={`h-full ${gradient.replace('bg-', 'bg-gradient-to-r ')} transition-all duration-1000`} 
-                     style={{ width: `${Math.min(value * 10, 100)}%` }}>
+                <div className={`h-full ${gradient.replace('bg-', 'bg-gradient-to-r ')} transition-all duration-1000`}
+                    style={{ width: `${Math.min(value * 10, 100)}%` }}>
                 </div>
             </div>
         </div>
@@ -481,7 +526,8 @@ const ViewNews = () => {
         let filtered = newsData.filter(n =>
             n.title?.toLowerCase().includes(term) ||
             n.excerpt?.toLowerCase().includes(term) ||
-            n.category?.toLowerCase().includes(term)
+            n.category?.toLowerCase().includes(term) ||
+            n.location?.toLowerCase().includes(term)
         );
 
         if (activeFilter === 'withImage') {
@@ -576,28 +622,28 @@ const ViewNews = () => {
 
                         {/* Stats Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                            <StatsCard 
+                            <StatsCard
                                 icon={FiGlobe}
                                 label="Total Articles"
                                 value={stats.total}
                                 color="text-blue-600"
                                 gradient="bg-gradient-to-br from-blue-500 to-blue-600"
                             />
-                            <StatsCard 
+                            <StatsCard
                                 icon={FiImage}
                                 label="With Images"
                                 value={stats.withImage}
                                 color="text-green-600"
                                 gradient="bg-gradient-to-br from-green-500 to-green-600"
                             />
-                            <StatsCard 
+                            <StatsCard
                                 icon={FiVideo}
                                 label="With Videos"
                                 value={stats.withVideo}
                                 color="text-purple-600"
                                 gradient="bg-gradient-to-br from-purple-500 to-purple-600"
                             />
-                            <StatsCard 
+                            <StatsCard
                                 icon={FiBarChart2}
                                 label="Categories"
                                 value={stats.categories}
