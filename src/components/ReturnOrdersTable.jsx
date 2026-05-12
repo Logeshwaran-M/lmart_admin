@@ -490,31 +490,27 @@ export default function ReturnOrdersTable() {
                         <span className="text-xs text-gray-400 italic">No Image</span>
                     )}
                 </td>
-
+                <td className="p-4 min-w-[100px]">
+                    <ReturnActionChip action={order.returnAction} />
+                </td>
                 <td className="p-4 min-w-[120px]">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="flex-1 px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs font-bold rounded-md shadow-sm transition-colors flex items-center justify-center gap-1"
+                        >
+                            <FiEye className="w-3 h-3" /> View
+                        </button>
 
-                    <div className="flex flex-col gap-2">
-                        <ReturnActionChip action={order.returnAction} />
-                        
-                        <div className="flex gap-2">
+                        {order.status === "requested" && (
                             <button
-                                onClick={() => setSelectedOrder(order)}
-                                className="flex-1 px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs font-bold rounded-md shadow-sm transition-colors flex items-center justify-center gap-1"
+                                onClick={() => handleAcceptReturn(order)}
+                                className="flex-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-md shadow-sm transition-colors"
                             >
-                                <FiEye className="w-3 h-3" /> View
+                                Accept
                             </button>
-
-                            {order.status === "requested" && (
-                                <button
-                                    onClick={() => handleAcceptReturn(order)}
-                                    className="flex-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-md shadow-sm transition-colors"
-                                >
-                                    Accept
-                                </button>
-                            )}
-                        </div>
+                        )}
                     </div>
-
                 </td>
 
             </tr>
@@ -567,7 +563,7 @@ export default function ReturnOrdersTable() {
 
                             <tr>
 
-                                {['CUSTOMER', 'CONTACT', 'ADDRESS', 'ITEMS', 'REFUND AMOUNT', 'REASON', 'DATE', 'IMAGE', 'ACTION'].map(header => (
+                                {['CUSTOMER', 'CONTACT', 'ADDRESS', 'ITEMS', 'REFUND AMOUNT', 'REASON', 'DATE', 'IMAGE', 'STATUS', 'ACTION'].map(header => (
 
                                     <th key={header} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
 
