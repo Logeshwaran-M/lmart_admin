@@ -715,49 +715,40 @@ await setDoc(docRef, {
 
                                 <div className="space-y-4">
 
-                                    {formData.marketRates.map((rate, index) => {
-                                        const placeholders = [
-                                            { first: "name", second: "email" },
-                                            { first: "phone", second: "address" },
-                                            { first: "city", second: "pincode" }
-                                        ];
-                                        const currentPlaceholder = placeholders[index] || { first: "Label", second: "Value" };
-
-                                        return (
-                                            <div key={index} className="flex gap-4 items-end animate-fadeIn">
-                                                <div className="flex-1">
-                                                    <input
-                                                        type="text"
-                                                        placeholder={currentPlaceholder.first}
-                                                        value={rate.itemName}
-                                                        onChange={(e) => handleMarketRateChange(index, 'itemName', e.target.value)}
-                                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-                                                        disabled={isFormDisabled}
-                                                    />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <input
-                                                        type="text"
-                                                        placeholder={currentPlaceholder.second}
-                                                        value={rate.price}
-                                                        onChange={(e) => handleMarketRateChange(index, 'price', e.target.value)}
-                                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-                                                        disabled={isFormDisabled}
-                                                    />
-                                                </div>
-                                                {formData.marketRates.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeMarketRate(index)}
-                                                        className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-                                                        disabled={isFormDisabled}
-                                                    >
-                                                        <FiTrash2 size={20} />
-                                                    </button>
-                                                )}
+                                    {formData.marketRates.map((rate, index) => (
+                                        <div key={index} className="flex gap-4 items-end animate-fadeIn">
+                                            <div className="flex-1">
+                                                <input
+                                                    type="text"
+                                                    placeholder=""
+                                                    value={rate.itemName}
+                                                    onChange={(e) => handleMarketRateChange(index, 'itemName', e.target.value)}
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                                    disabled={isFormDisabled}
+                                                />
                                             </div>
-                                        );
-                                    })}
+                                            <div className="flex-1">
+                                                <input
+                                                    type="text"
+                                                    placeholder=""
+                                                    value={rate.price}
+                                                    onChange={(e) => handleMarketRateChange(index, 'price', e.target.value)}
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                                    disabled={isFormDisabled}
+                                                />
+                                            </div>
+                                            {formData.marketRates.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeMarketRate(index)}
+                                                    className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                                                    disabled={isFormDisabled}
+                                                >
+                                                    <FiTrash2 size={20} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
 
                                     {formData.marketRates.length < 3 && (
                                         <button

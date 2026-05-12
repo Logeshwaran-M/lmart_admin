@@ -284,31 +284,12 @@ const ViewDetailsModal = ({ isOpen, onClose, newsItem }) => {
                                     </div>
                                 )}
 
-                                {Array.isArray(newsItem.marketRates) && newsItem.marketRates.map((rate, index) => {
-                                    const labels = [
-                                        { first: "Name", second: "Email" },
-                                        { first: "Phone", second: "Address" },
-                                        { first: "City", second: "Pincode" }
-                                    ];
-                                    const currentLabel = labels[index] || { first: "Label", second: "Value" };
-
-                                    return (
-                                        <React.Fragment key={index}>
-                                            {rate.itemName && (
-                                                <div className="flex gap-2 text-lg">
-                                                    <span className="text-gray-900 font-bold min-w-[110px]">{currentLabel.first}:</span>
-                                                    <span className="text-gray-700">{rate.itemName}</span>
-                                                </div>
-                                            )}
-                                            {rate.price && (
-                                                <div className="flex gap-2 text-lg">
-                                                    <span className="text-gray-900 font-bold min-w-[110px]">{currentLabel.second}:</span>
-                                                    <span className="text-gray-700">{rate.price}</span>
-                                                </div>
-                                            )}
-                                        </React.Fragment>
-                                    );
-                                })}
+                                {Array.isArray(newsItem.marketRates) && newsItem.marketRates.map((rate, index) => (
+                                    <div key={index} className="flex gap-2 text-lg">
+                                        <span className="text-gray-900 font-bold min-w-[110px] capitalize">{rate.itemName}:</span>
+                                        <span className="text-gray-700">{rate.price}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
